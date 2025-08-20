@@ -1,0 +1,456 @@
+it will create new folder for angular project ng new my-angular-app
+->ng generate component user-profile
+
+standolone:
+Before Angular 15, every component had to be listed inside a module (usually app.module.ts) under declarations.
+Now, with standalone, you can skip modules entirely — each component can import its own dependencies and be used directly.
+
+my-angular-app/
+├── angular.json          → Angular CLI config (build, serve, schematics)
+├── package.json          → Dependencies and npm scripts
+├── src/
+│   ├── main.ts           → App bootstrap (runs your App component in browser)
+│   ├── main.server.ts    → Server-side rendering bootstrap
+│   ├── app/
+│   │   ├── app.ts        → Root App component
+│   │   └── user-profile/ → Our custom component
+│   └── styles.css        → Global CSS
+└── tsconfig*.json        → TypeScript configs
+
+
+day -1
+----------------------------------------------
+1. Parent → Child communication
+
+Concept: Pass data from parent to child using @Input().
+
+Steps:
+
+In child.ts:
+
+@Input() name!: string;
+@Input() age!: number;
+
+
+In parent HTML:
+
+<app-user-profile-v2 [name]="parentName" [age]="parentAge"></app-user-profile-v2>
+
+
+Flow: Data moves downwards from parent to child.
+
+2. Child → Parent communication
+
+Concept: Send data from child to parent using @Output() and EventEmitter.
+
+Steps:
+
+In child.ts:
+
+@Output() ageChange = new EventEmitter<number>();
+@Output() nameChange = new EventEmitter<string>();
+
+increaseAge() {
+  this.age++;
+  this.ageChange.emit(this.age);
+}
+changeName() {
+  this.name = this.name === 'John Doe' ? 'Jane Smith' : 'John Doe';
+  this.nameChange.emit(this.name);
+}
+
+
+In parent HTML:
+
+<app-user-profile-v3
+  [name]="parentNameV3"
+  [age]="parentAgeV3"
+  (ageChange)="updateAgeV3($event)"
+  (nameChange)="updateNameV3($event)">
+</app-user-profile-v3>
+
+
+In parent.ts:
+
+parentNameV3 = 'Sai';
+parentAgeV3 = 28;
+
+updateAgeV3(newAge: number) {
+  this.parentAgeV3 = newAge;
+}
+updateNameV3(newName: string) {
+  this.parentNameV3 = newName;
+}
+
+
+Flow: Data moves upwards from child to parent, then parent sends updated data back down to child.
+
+3. Mistakes we made today
+
+❌ Forgetting to add @Input() in new components → Angular doesn’t know about properties.
+
+❌ Forgetting to import the child component in parent’s imports → NG8001 error (“not a known element”).
+
+❌ Mismatch in property names (parentAge vs parentAgeV3) → TypeScript errors.
+
+❌ Forgetting (eventName) in parent HTML → Button clicks in child changed only local state, not parent’s state.
+
+❌ Using same variable name in different components without isolating → overwrote values unexpectedly.
+
+4. Correct Data Flow Summary
+Parent → Child
+
+Use @Input() in child.
+
+Pass value using [propertyName]="parentValue" in parent HTML.
+
+Child → Parent
+
+Use @Output() in child with EventEmitter.
+
+Emit changes with .emit(newValue).
+
+Listen in parent HTML with (eventName)="parentMethod($event)".
+
+Update parent’s property so it syncs back to child.
+
+
+
+------------------------------------------------------------
+Today’s Notes (Progress Recap)
+
+Routing Recap
+
+AppComponent has <router-outlet> → dynamically loads components.
+
+Links with routerLink let you navigate between User Profile V3, User Profile V4 (Service), and Registration Form.
+
+Example:
+
+<a routerLink="/v3" routerLinkActive="active">User Profile V3</a>
+
+
+User Profile V3
+
+Uses @Input() and @Output() to communicate between parent & child.
+
+Data binding works with (eventEmitter)="handler($event)".
+
+User Profile V4 (Service + RxJS)
+
+Shared data via BehaviorSubject in a service.
+
+Multiple components can update & reflect same data instantly.
+
+Example:
+
+private ageSource = new BehaviorSubject<number>(28);
+age$ = this.ageSource.asObservable();
+
+
+Registration Form (Template-driven)
+
+Learned how to build a basic form using Angular directives.
+
+Example:
+
+<form #regForm="ngForm" (ngSubmit)="onSubmit(regForm)">
+  <input name="email" [(ngModel)]="user.email" required />
+</form>
+
+
+Used regForm.submitted for validation checks.
+
+Background Image Setup
+
+Correct method: Use CSS background instead of <img>.
+
+Example:
+
+body {
+  margin: 0;
+  height: 100vh;
+  width: 100vw;
+  background: url('/download1.jpg') no-repeat center center;
+  background-size: 100% 100%;
+}
+
+⚠️ Mistakes & Fixes
+
+Wrong Comment in CSS
+
+❌ * comment */
+
+✅ /* comment */
+
+Wrong comment broke background CSS.
+
+Duplicate Image
+
+You had both <img> and background-image.
+
+❌ Caused image twice + zoom issue.
+
+✅ Fixed by removing <img> and using only CSS background.
+
+Confusion in Routing
+
+At first, V3 & V4 showed together → you placed them directly in app.ts.
+
+✅ Fixed by relying only on <router-outlet>.
+
+Form Error (regForm not found)
+
+Used regForm in template without defining reference.
+
+✅ Fixed by adding #regForm="ngForm" in <form>.
+
+Asset Path Issue
+
+At first image was not loading because Angular expected files in assets/.
+
+✅ Fixed by putting image in public/ (since your angular.json mapped assets there).
+
+
+📒 Today’s Notes (Registration Form + Preview Logic)
+
+Current Behavior (Initial Logic)
+
+Used one object (user) bound to inputs with [(ngModel)].
+
+Because of two-way binding, the preview updated immediately while typing.
+
+Updated Behavior (Submit Logic)
+
+Introduced two objects:
+
+user → bound to input fields (temporary values).
+
+formData → stores submitted values for preview.
+
+On (ngSubmit), we copy values from user → formData.
+
+Preview now updates only after clicking Submit.
+
+CSS Notes
+
+.center applied correctly for centering elements.
+
+Border & background-color styling work fine.
+
+Inputs can also be centered with the same .center or flexbox.
+
+⚠️ Mistakes & Fixes
+
+router-outlet error → caused because RouterOutlet was in template but not imported. Fixed by importing RouterOutlet in AppComponent.
+
+Registration form showing twice → happened because <app-registration-form> was placed manually and routed. Fixed by keeping only one method.
+
+Preview showing live input → fixed by separating user (input) and formData (submitted data).
+-------------------------------------------------------------------------
+1. Django + PostgreSQL Integration (Reminder)
+
+We installed PostgreSQL and tried to connect it to Django.
+
+In settings.py, we configure:
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'your_db_name',
+        'USER': 'your_username',
+        'PASSWORD': 'your_password',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+
+
+After setting this, Django models automatically talk to PostgreSQL when we run:
+
+python manage.py makemigrations
+python manage.py migrate
+
+2. Serializer Usage in DRF
+
+Example code:
+
+serializer = UserRegistrationSerializer(data=request.data)
+if serializer.is_valid():
+    serializer.save()
+
+
+👉 Your question: “Why are we passing data=request.data when we did not define any variables inside the serializer class?”
+
+Answer: Because at class creation time, DRF already collected fields (via metaclass).
+
+When you create serializer = UserRegistrationSerializer(data=...), that data gets mapped to those fields automatically.
+
+3. What Happens Internally
+
+You define:
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password']
+
+
+At import time (when Python loads this class):
+
+DRF metaclass (ModelSerializerMetaclass) scans the Meta class.
+
+It automatically generates username = CharField(...), email = EmailField(...), password = CharField(...).
+
+So even though you don’t see explicit variables, they exist.
+
+Later, when you call:
+
+serializer = UserRegistrationSerializer(data=request.data)
+
+
+The data is bound to those generated fields.
+
+.is_valid() runs validation on them.
+
+4. Debugging with Print Statements
+
+You asked: “How can I see what’s happening inside serializer?”
+
+Answer: Add print() inside serializer methods:
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password']
+
+    def validate(self, data):
+        print("Inside validate, got data:", data)
+        return data
+
+
+When you hit the API in browser/Postman, prints will show in Django server terminal, not browser.
+
+5. Why Metaclasses Come In
+
+Your doubt was: “How does serializer get fields automatically if we didn’t declare them?”
+
+The magic = metaclass (ModelSerializerMetaclass).
+
+It scans the Meta class, reads fields, and dynamically adds them to the serializer class before you ever create an object.
+
+6. Understanding Metaclasses (Step by Step)
+
+We broke it down:
+
+Normal objects are created by classes.
+
+Classes themselves are objects, created by metaclasses.
+
+Default metaclass in Python = type.
+
+In DRF, they override this with ModelSerializerMetaclass.
+
+Example proof:
+
+class Dog: 
+    pass
+
+dog1 = Dog()
+print(type(dog1))   # <class '__main__.Dog'>
+print(type(Dog))    # <class 'type'>
+
+
+So:
+
+dog1 → instance of Dog
+Dog → instance of type
+
+7. Custom Metaclass Example
+
+We wrote:
+
+class MyMeta(type):
+    def __new__(mcls, name, bases, attrs):
+        print("Creating class:", name)
+        print("Attributes found:", attrs)
+        return super().__new__(mcls, name, bases, attrs)
+
+class MyClass(metaclass=MyMeta):
+    a = 1
+    b = 2
+
+
+When Python sees class MyClass(...), it actually calls:
+
+MyMeta.__new__(MyMeta, "MyClass", (object,), {"a": 1, "b": 2, "__module__": "__main__"})
+
+8. The Chain
+
+Final hierarchy:
+
+dog1 (object) ──> Dog (class)
+Dog (class) ────> type (metaclass)
+UserRegistrationSerializer ──> ModelSerializerMetaclass (metaclass)
+---------------------------------------------------------------------------------
+🔹 Backend (Django + DRF)
+
+Created Django project (backend) & app (api).
+
+Model: UserRegistration with fields → name, email, age.
+
+Serializer: UserRegistrationSerializer for validation.
+
+API View (register_user):
+
+Accepts POST data.
+
+Validates with serializer.
+
+Saves to DB if valid.
+
+Returns success + saved user data.
+
+Prints debug logs (Step 1 … Step 5) to console.
+
+URL: /api/register/ → connected to the view.
+
+✅ Backend is ready and working.
+
+🔹 Frontend (Angular 18 project: my-angular-app)
+
+AppComponent:
+
+Root component (app-root).
+
+Imports RegistrationFormComponent.
+
+RegistrationFormComponent:
+
+Form fields: name, email, age.
+
+On Submit → calls RegistrationService.registerUser().
+
+Shows preview of saved user (with *ngIf).
+
+RegistrationService:
+
+Uses HttpClient to POST to Django API (http://127.0.0.1:8000/api/register/).
+
+Fixes done:
+
+Added FormsModule for [(ngModel)].
+
+Added CommonModule for *ngIf.
+
+Configured provideHttpClient(withFetch()) in main.ts (new Angular 18 way).
+
+Handled previewData to show saved data after submit.
+
+✅ Angular app builds & runs (ng serve) without breaking.
+
+⚠️ Mistakes Encountered (and fixed)
+
+Forgot to import CommonModule → *ngIf error.
+
+Used old HttpClientModule → deprecated warning. Fixed by using provideHttpClient(withFetch()).
