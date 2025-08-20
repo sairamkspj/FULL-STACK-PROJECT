@@ -1,0 +1,33 @@
+form {
+  margin: 20px;
+}
+label {
+  display: inline-block;
+  width: 80px;
+}
+
+.center{
+    position:relative;
+    left: -20px;
+    border: 3px solid #73AD21;
+    background-color: rgb(230, 173, 230);
+    
+}
+
+.button-box{
+    position:relative;
+    left: -10px;
+    border: 3px solid #73AD21;
+    background-color: rgb(99, 196, 196);
+    
+}
+
+.input-box{
+    position:relative;
+    left: -10px;
+    border: 3px solid #73AD21;
+    padding: 8px;
+    width: 250px;                /* fixed width for better look */
+    text-align: center;
+    
+}

@@ -1,0 +1,23 @@
+<form (ngSubmit)="onSubmit()">
+  <label>Name:</label>
+  <input [(ngModel)]="name" name="name" required />
+
+  <label>Email:</label>
+  <input [(ngModel)]="email" name="email" required />
+
+  <label>Age:</label>
+  <input [(ngModel)]="age" name="age" required />
+
+  <label>Password:</label>
+  <input [(ngModel)]="password" name="password" type="password" required />
+
+  <button type="submit">Register</button>
+</form>
+
+<!-- Preview -->
+<div *ngIf="previewData">
+  <p>Name: {{ previewData.name }}</p>
+  <p>Email: {{ previewData.email }}</p>
+  <p>Age: {{ previewData.age }}</p>
+  <p>Password: {{ previewData.password }}</p>
+</div>
